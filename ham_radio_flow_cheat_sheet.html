@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ham Sandwich — Ham Radio Flow Assistant</title>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <div class="wrap wrap--app">
+    <div class="app-brand-banner no-print">
+      <img
+        class="app-brand-banner__logo"
+        src="images/ham-sandwich-banner.png"
+        alt="Ham Sandwich"
+        width="1376"
+        height="768"
+        loading="eager"
+        decoding="async"
+      />
+    </div>
+    <header class="app-header no-print" role="banner">
+      <div class="app-header__call">
+        <input
+          id="globalCallsign"
+          type="text"
+          maxlength="14"
+          placeholder="Your callsign"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Your callsign"
+        />
+      </div>
+      <div class="app-header__clocks clock-block">
+        <div id="utcClock" class="utc" aria-live="polite">--:--:-- UTC</div>
+        <div id="localClock" class="local">Local --:--:--</div>
+      </div>
+      <div class="app-header__tools">
+        <div class="grid-square-badge">Grid: <span id="gridSquareDisplay">—</span></div>
+        <div class="app-header__tool-row">
+          <button type="button" class="small secondary" id="btnUpdateGrid">Update grid</button>
+          <button type="button" class="small secondary" id="btnKeyboardHelp" title="Shortcuts (?)">?</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="teleprompter" aria-label="Suggested script">
+        <div id="teleEmpty" class="teleprompter__empty">
+          <p>Pick a flow type in <strong>Setup</strong> below and press <strong>Build flow</strong> to see your script here.</p>
+          <p class="muted teleprompter__fineprint">Examples use fictional callsigns and repeaters. Verify repeaters, tones, talkgroups, and regulations before transmitting.</p>
+        </div>
+        <div id="teleActive" class="teleprompter__active hidden">
+          <div class="teleprompter__top">
+            <span id="teleFlowTitle" class="teleprompter__flow-title">—</span>
+            <div class="teleprompter__timer-block">
+              <span id="timerDisplay" class="teleprompter__timer" aria-live="polite">00:00</span>
+              <button type="button" class="small secondary" id="btnTimerToggle" title="Start/stop timer (T)">⏱</button>
+            </div>
+            <button type="button" class="small secondary teleprompter__aa" id="btnLargeScript" title="Larger script text">Aa</button>
+          </div>
+          <p id="teleStepLabel" class="teleprompter__step-label" aria-live="polite">—</p>
+          <div id="currentScript" class="teleprompter__script script" tabindex="0"></div>
+          <div id="stepDots" class="step-dots" role="tablist" aria-label="Flow steps"></div>
+          <div class="teleprompter__actions no-print">
+            <button type="button" id="backBtn" class="secondary">◀ Back</button>
+            <button type="button" id="copyScriptBtn">Copy script</button>
+            <button type="button" id="advanceBtn">Next ▶</button>
+            <button type="button" id="btnStuck" class="secondary">Stuck?</button>
+            <button type="button" id="resetFlowBtn" class="warn">Reset flow</button>
+          </div>
+          <details class="teleprompter__edit no-print">
+            <summary>Edit wording &amp; returns</summary>
+            <div class="stack teleprompter__edit-body">
+              <div>
+                <label>Quick return / wrapped line</label>
+                <div id="returnSnippet" class="script script--compact" aria-live="polite"></div>
+              </div>
+              <div>
+                <label for="messageBody">Your message body</label>
+                <textarea id="messageBody" placeholder="Middle of your message; app wraps with handback lines."></textarea>
+              </div>
+              <div>
+                <label for="customScript">Override script for this step</label>
+                <textarea id="customScript" placeholder="Leave blank to use the suggested script."></textarea>
+              </div>
+              <div class="timer-inline">
+                <span class="muted">Timer</span>
+                <button type="button" id="btnTimerStart" class="small">Start</button>
+                <button type="button" id="btnTimerStop" class="small secondary">Stop</button>
+                <button type="button" id="btnTimerLap" class="small">Lap</button>
+                <button type="button" id="btnTimerReset" class="small warn">Reset</button>
+              </div>
+              <div id="timerLaps" class="timer-laps muted"></div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="netRibbon" class="net-ribbon hidden no-print" aria-label="Net status">
+        <div class="net-ribbon__row">
+          <span class="net-ribbon__badge">Net</span>
+          <span>Speaking: <strong id="currentSpeakerDisplay">—</strong></span>
+          <span>Control: <strong id="controlHolderDisplay">—</strong></span>
+          <span>Next: <strong id="nextSpeakerDisplay">—</strong></span>
+          <label class="net-ribbon__toggle muted">
+            <input type="checkbox" id="chkNetRosterMode" />
+            Roster view
+          </label>
+          <span class="net-ribbon__cue muted">Return: <span id="returnCueDisplay">—</span></span>
+        </div>
+        <div class="net-ribbon__actions">
+          <button type="button" id="rotateSpeakerBtn" class="small secondary">Rotate speaker</button>
+          <button type="button" id="btnNetManage" class="small">Manage net…</button>
+        </div>
+      </section>
+
+      <section id="netRosterSection" class="net-roster-section hidden no-print" aria-label="Net roster">
+        <div class="net-roster-section__head">
+          <h2 class="net-roster-section__title">On net</h2>
+          <p class="muted net-roster-section__hint">Rotation order (next after the current speaker). Click a card to set who is speaking. Names in Manage net.</p>
+        </div>
+        <div id="netRosterGrid" class="net-roster-grid" role="group" aria-label="Stations on net — click to set speaking"></div>
+      </section>
+
+      <section class="setup-card panel" id="setupCard">
+        <div class="panel__head">
+          <h2 class="panel__title">Setup</h2>
+          <span class="pill">Build your flow</span>
+        </div>
+        <div class="panel__body stack">
+          <div class="setup-simple">
+            <div class="setup-grid setup-grid--simple">
+              <div>
+                <label for="flowType">Flow type</label>
+                <select id="flowType">
+                  <option value="vhf_net">VHF/UHF net</option>
+                  <option value="dmr_net">DMR net</option>
+                  <option value="repeater_qso">Repeater QSO</option>
+                  <option value="simplex_qso">Simplex QSO</option>
+                  <option value="dmr_qso">DMR talkgroup / hotspot QSO</option>
+                  <option value="cq_call">CQ call</option>
+                </select>
+              </div>
+              <div>
+                <label for="myCallsign">Your callsign</label>
+                <input id="myCallsign" placeholder="M0AAA" autocomplete="off" />
+              </div>
+              <div>
+                <label for="otherCallsign">Other / next station</label>
+                <input id="otherCallsign" placeholder="G4BBB" autocomplete="off" />
+              </div>
+              <div>
+                <label for="trafficType">Traffic / intent</label>
+                <select id="trafficType">
+                  <option>No traffic</option>
+                  <option>With traffic</option>
+                  <option>Just monitoring</option>
+                  <option>Short QSO</option>
+                  <option>Weather report</option>
+                </select>
+              </div>
+              <div>
+                <label for="accessMethod">Access</label>
+                <select id="accessMethod">
+                  <option>Simplex</option>
+                  <option>Repeater</option>
+                  <option>Hotspot</option>
+                  <option>DMR Repeater</option>
+                </select>
+              </div>
+              <div>
+                <label for="repeaterName">Repeater / hotspot / TG</label>
+                <input id="repeaterName" placeholder="Example: GB3EXA, TG91" />
+              </div>
+            </div>
+            <div class="setup-actions">
+              <button type="button" id="buildFlowBtn" class="success">Build flow</button>
+              <button type="button" id="fetchWeatherBtn">Fetch weather</button>
+            </div>
+          </div>
+          <details id="detailsSetupAdvanced" class="setup-advanced">
+            <summary>More options</summary>
+            <div class="setup-grid setup-grid--advanced stack">
+              <div class="two">
+                <div><label for="operatorName">Your name</label><input id="operatorName" placeholder="Alex" /></div>
+                <div><label for="qth">QTH</label><input id="qth" placeholder="Anytown, Scotland" /></div>
+              </div>
+              <div class="two">
+                <div><label for="postcode">Postcode (weather / grid)</label><input id="postcode" placeholder="AB1 2CD" /></div>
+                <div><label for="conversationStage">Conversation stage</label>
+                  <select id="conversationStage">
+                    <option value="opening">Opening</option>
+                    <option value="mid">In conversation / return</option>
+                    <option value="closing">Closing / final</option>
+                  </select>
+                </div>
+              </div>
+              <div class="two">
+                <div><label for="equipment">Radio</label><input id="equipment" placeholder="Example HT" /></div>
+                <div><label for="antenna">Antenna</label><input id="antenna" placeholder="Vertical" /></div>
+              </div>
+              <div>
+                <label for="signalReport">Signal report</label>
+                <input id="signalReport" value="5 and 9" />
+                <div id="rstPicker" class="stack rst-wrap"></div>
+                <div id="rstMeaning" class="rst-meaning muted"></div>
+              </div>
+              <div class="two">
+                <div><label for="weatherSummary">Weather summary</label><input id="weatherSummary" placeholder="Fetch from postcode" /></div>
+                <div><label for="extraNotes">Extra notes</label><input id="extraNotes" placeholder="Short QSO…" /></div>
+              </div>
+              <label class="etiquette-check"><input type="checkbox" id="timerAutoStart" /> Auto-start QSO timer when building flow</label>
+            </div>
+          </details>
+          <details id="detailsFlowKv" class="setup-flow-details">
+            <summary>Flow details (summary)</summary>
+            <div id="flowDetails" class="kv"></div>
+          </details>
+        </div>
+      </section>
+
+      <section class="reference no-print" aria-label="Reference">
+        <div class="ref-tabs" role="tablist" aria-label="Reference sections">
+          <button type="button" class="ref-tab-btn tab-btn active" data-tab="phrases" role="tab">Phrases</button>
+          <button type="button" class="ref-tab-btn tab-btn" data-tab="bands" role="tab">Bands</button>
+          <button type="button" class="ref-tab-btn tab-btn" data-tab="spell" role="tab">Spell</button>
+          <button type="button" class="ref-tab-btn tab-btn" data-tab="jargon" role="tab">Jargon</button>
+          <button type="button" class="ref-tab-btn tab-btn" data-tab="etiquette" role="tab">Etiquette</button>
+          <button type="button" class="ref-tab-btn tab-btn" data-tab="practice" role="tab">Practice</button>
+        </div>
+
+        <div id="refTabPhrases" class="ref-tab-panel tab-panel active" data-tab="phrases" role="tabpanel">
+          <div class="panel panel--flat">
+            <div class="panel__head"><h3 class="panel__title">Phrase templates</h3><span class="pill">Examples use <strong id="heroCallsignDisplay">M0AAA</strong></span></div>
+            <div class="panel__body stack">
+              <div id="ovPhraseExamples" class="nav-cards" aria-live="polite"></div>
+              <div class="ref-cards">
+                <div class="ref-card">
+                  <h4>Glue words</h4>
+                  <p><strong>Returning</strong> — my turn. <strong>QTH</strong> — location. <strong>QSY</strong> — change frequency. <strong>QSL</strong> — copied. <strong>QRT</strong> — off air.</p>
+                </div>
+                <div class="ref-card">
+                  <h4>Habit</h4>
+                  <p>Callsign at start and end of each over. Handovers: their call first, yours last.</p>
+                </div>
+                <div class="ref-card">
+                  <h4>Net template (example)</h4>
+                  <div id="ovExNetTemplate" class="script script--compact"></div>
+                </div>
+                <div class="ref-card">
+                  <h4>Pass to next station</h4>
+                  <div id="ovExPassScript" class="script script--compact"></div>
+                </div>
+              </div>
+              <div class="topic-block ref-card">
+                <h4>Conversation topic</h4>
+                <p class="muted">Stuck for something to say?</p>
+                <div id="topicSuggestion" class="script script--compact" aria-live="polite"></div>
+                <button type="button" id="btnTopicAnother" class="secondary">Another idea</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="refTabBands" class="ref-tab-panel tab-panel" data-tab="bands" role="tabpanel">
+          <div class="panel panel--flat">
+            <div class="panel__head"><h3 class="panel__title">Band reference</h3><span class="pill">UK-oriented</span></div>
+            <div class="panel__body stack">
+              <div id="bandplanMount"></div>
+              <div class="ref-card">
+                <h4>Example repeaters (fictional)</h4>
+                <div id="repeatersMount"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="refTabSpell" class="ref-tab-panel tab-panel" data-tab="spell" role="tabpanel">
+          <div class="panel panel--flat">
+            <div class="panel__head"><h3 class="panel__title">NATO phonetics</h3></div>
+            <div class="panel__body stack">
+              <div>
+                <label for="phoneticInput">Spell a callsign</label>
+                <input id="phoneticInput" placeholder="M0AAA" autocomplete="off" />
+                <div id="phoneticOutput" class="script script--compact" aria-live="polite"></div>
+              </div>
+              <div id="phoneticGrid" class="phonetic-grid"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="refTabJargon" class="ref-tab-panel tab-panel" data-tab="jargon" role="tabpanel">
+          <div class="panel panel--flat">
+            <div class="panel__head"><h3 class="panel__title">Jargon</h3></div>
+            <div class="panel__body stack">
+              <div>
+                <label for="jargonSearch">Search</label>
+                <input id="jargonSearch" placeholder="QTH, net, 73…" autocomplete="off" />
+                <div id="jargonResults" class="jargon-results"></div>
+              </div>
+              <div>
+                <label for="jargonDecodeInput">Decode a phrase (rough)</label>
+                <textarea id="jargonDecodeInput" placeholder="QSY to 145.500…"></textarea>
+                <button type="button" id="jargonDecodeBtn" class="secondary">Decode</button>
+                <div id="jargonDecodeOut" class="script script--compact" aria-live="polite"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="refTabEtiquette" class="ref-tab-panel tab-panel" data-tab="etiquette" role="tabpanel">
+          <div class="panel panel--flat">
+            <div class="panel__head"><h3 class="panel__title">Etiquette</h3></div>
+            <div class="panel__body stack">
+              <div class="info-card">
+                <h4>Before you key</h4>
+                <label class="etiquette-check"><input type="checkbox" id="chkListen30" /> Listened ~30s — clear?</label>
+                <label class="etiquette-check"><input type="checkbox" id="chkAskInUse" /> Simplex: asked if frequency in use?</label>
+                <label class="etiquette-check"><input type="checkbox" id="chkCourtesyBeep" /> Repeater: waited for courtesy tail</label>
+                <label class="etiquette-check"><input type="checkbox" id="chkReady" /> Know callsign and what you will say</label>
+              </div>
+              <details class="info-card">
+                <summary>Repeater etiquette</summary>
+                <div class="muted stack" style="margin-top:8px">
+                  <p><strong>Kerchunk</strong> — identify when you access.</p>
+                  <p><strong>Gaps</strong> — pause after courtesy tone for break-ins.</p>
+                  <p><strong>ID</strong> — follow your licence (often ~15 min + end of series; confirm locally).</p>
+                  <p><strong>Breaking in</strong> — your call once between overs for priority/safety.</p>
+                  <p><strong>CTCSS</strong> — wrong tone = wrong machine or silence.</p>
+                  <p><strong>Double</strong> — both stop; one says “go ahead”.</p>
+                </div>
+              </details>
+              <details class="info-card">
+                <summary>Net roles</summary>
+                <p class="muted" style="margin-top:8px"><strong>Net control</strong> runs order. <strong>With traffic</strong> = message for NC/group. <strong>Late check-in</strong> — wait for a gap and follow NC.</p>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div id="refTabPractice" class="ref-tab-panel tab-panel" data-tab="practice" role="tabpanel">
+          <div class="panel panel--flat">
+            <div class="panel__head"><h3 class="panel__title">Practice</h3></div>
+            <div class="panel__body stack">
+              <p class="muted" id="practiceProgress"></p>
+              <div id="practiceOutput"><p class="muted">Start practice to rehearse.</p></div>
+              <div class="setup-actions">
+                <button type="button" id="btnPracticeStart" class="success">Start</button>
+                <button type="button" id="btnPracticeNext" class="secondary">Next line</button>
+                <button type="button" id="btnPracticeReset" class="warn">Reset</button>
+              </div>
+              <div>
+                <label for="practiceFeel">Reflection (saved locally)</label>
+                <textarea id="practiceFeel" rows="2" placeholder="How did it go?"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer muted no-print">
+      <p>Examples are fictional. Verify repeaters, tones, and talkgroups before transmitting. Licence rules are yours to follow.</p>
+      <p class="app-footer__links">
+        <a href="https://rsgb.org" target="_blank" rel="noopener noreferrer">RSGB</a>
+        ·
+        <a href="https://www.ofcom.org.uk/" target="_blank" rel="noopener noreferrer">Ofcom</a>
+        ·
+        <button type="button" class="linklike" id="btnFooterShortcuts">Keyboard shortcuts</button>
+      </p>
+    </footer>
+  </div>
+
+  <div id="stickyBar" class="sticky-bar no-print hidden" role="toolbar" aria-label="Quick actions">
+    <button type="button" id="stickyBack" class="small secondary" aria-label="Previous step">◀</button>
+    <button type="button" id="stickyCopy" class="small">Copy</button>
+    <button type="button" id="stickyNext" class="small success" aria-label="Next step">Next ▶</button>
+    <button type="button" id="stickyStuck" class="small secondary">Stuck?</button>
+  </div>
+
+  <div id="netManageModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="netManageTitle">
+    <div class="modal modal--net">
+      <h3 id="netManageTitle">Net participants</h3>
+      <p class="muted">Check-ins stay on this device. Add optional names for the roster view.</p>
+      <div class="member-tools member-tools--net-add">
+        <div>
+          <label for="netMemberInput">Callsign</label>
+          <input id="netMemberInput" placeholder="M0AAA" autocomplete="off" spellcheck="false" />
+        </div>
+        <div>
+          <label for="netMemberNameInput">Name</label>
+          <input id="netMemberNameInput" placeholder="Optional" autocomplete="name" />
+        </div>
+        <button id="addNetMemberBtn" class="success" type="button">Add</button>
+      </div>
+      <div class="setup-actions" style="margin-top:10px">
+        <button id="setMeControlBtn" type="button">Set me in control</button>
+        <button id="clearNetMembersBtn" class="danger" type="button">Clear list</button>
+      </div>
+      <div id="membersList" class="members-list" style="margin-top:12px"></div>
+      <div class="setup-actions" style="margin-top:14px">
+        <button type="button" id="btnNetManageClose" class="secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" id="fabPanic" class="fab-panic no-print" title="I'm stuck (P)">I'm stuck</button>
+
+  <div id="panicModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="panicTitle">
+    <div class="modal">
+      <h3 id="panicTitle">Quick phrases</h3>
+      <p class="muted">Tap to copy. Uses your current callsign / flow context.</p>
+      <div id="panicPhrases" class="phrase-list"></div>
+      <div class="setup-actions" style="margin-top:14px">
+        <button type="button" id="panicCloseBtn" class="secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="keyboardHelp" class="keyboard-help" role="dialog" aria-modal="true" aria-labelledby="kbdTitle">
+    <div class="modal">
+      <h3 id="kbdTitle">Keyboard shortcuts</h3>
+      <ul class="muted">
+        <li><strong>→</strong> — Next step</li>
+        <li><strong>←</strong> — Previous step</li>
+        <li><strong>C</strong> — Copy script</li>
+        <li><strong>T</strong> — Timer start/stop</li>
+        <li><strong>P</strong> — Stuck phrases</li>
+        <li><strong>Esc</strong> — Reset flow &amp; close overlays</li>
+        <li><strong>?</strong> — This help</li>
+      </ul>
+      <button type="button" id="keyboardHelpClose" class="secondary">Close</button>
+    </div>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/toasts.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/clock.js"></script>
+  <script src="js/flows.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/phonetics.js"></script>
+  <script src="js/examples.js"></script>
+  <script src="js/jargon.js"></script>
+  <script src="js/rst.js"></script>
+  <script src="js/bandplan.js"></script>
+  <script src="js/practice.js"></script>
+  <script src="js/panic.js"></script>
+  <script src="js/topics.js"></script>
+  <script src="js/etiquette.js"></script>
+  <script src="js/repeaters.js"></script>
+  <script src="js/progressive.js"></script>
+  <script src="js/keyboard.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
