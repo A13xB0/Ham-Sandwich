@@ -107,24 +107,6 @@
     }
   }
 
-  function wireRepeaters(els, persist) {
-    const mount = H.utils.$('repeatersMount');
-    if (!mount) return;
-    mount.addEventListener('click', (e) => {
-      const t = e.target;
-      if (t && t.classList && t.classList.contains('use-repeater')) {
-        const call = t.getAttribute('data-call') || '';
-        const mode = t.getAttribute('data-mode') || 'Repeater';
-        els.repeaterName.value = call + ' (example)';
-        if (mode === 'DMR') els.accessMethod.value = 'DMR Repeater';
-        else els.accessMethod.value = 'Repeater';
-        H.toasts.showToast('Filled example repeater (verify before transmitting)', 'info', 4000);
-        persist();
-        H.ui.updateView();
-      }
-    });
-  }
-
   function wirePractice(els, persist) {
     const start = H.utils.$('btnPracticeStart');
     const next = H.utils.$('btnPracticeNext');
@@ -273,12 +255,10 @@
 
     H.phonetics.renderGrid(H.utils.$('phoneticGrid'));
     H.bandplan.render(H.utils.$('bandplanMount'));
-    H.repeaters.render(H.utils.$('repeatersMount'));
 
     wireReferenceTabs();
     wireJargon(els);
     wirePhonetics(els);
-    wireRepeaters(els, persist);
     wirePractice(els, persist);
     wirePanic(els, persist);
     wireNetModal(els, persist);
