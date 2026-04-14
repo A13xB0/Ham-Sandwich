@@ -253,33 +253,6 @@
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
-.bandplan-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.bandplan-toolbar select {
-  min-width: 200px;
-  max-width: 100%;
-}
-
-.bandplan-detail {
-  overflow-x: auto;
-}
-
-.band-summary {
-  margin: 0 0 10px;
-  font-size: 0.92rem;
-}
-
-.band-dmr-title {
-  margin: 0 0 10px;
-  font-size: 1rem;
-}
-
 .modal--net {
   width: min(520px, 100%);
 }

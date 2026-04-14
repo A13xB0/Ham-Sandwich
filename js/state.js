@@ -33,7 +33,7 @@
       phrases: 'phrases',
       phonetics: 'spell',
       jargon: 'jargon',
-      bandplan: 'bands',
+      bandplan: 'phrases',
       etiquette: 'etiquette',
       log: 'phrases',
       milestones: 'phrases',
@@ -180,6 +180,7 @@
       } else {
         state.referenceTab = 'phrases';
       }
+      if (state.referenceTab === 'bands') state.referenceTab = 'phrases';
       state.setupAdvanced = typeof p.setupAdvanced === 'boolean' ? p.setupAdvanced : false;
       state.topicIndex = typeof p.topicIndex === 'number' ? p.topicIndex : 0;
       state.flow = Array.isArray(p.flowSnapshot) ? p.flowSnapshot : [];

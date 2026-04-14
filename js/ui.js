@@ -436,6 +436,8 @@
 
   function setReferenceTab(tab) {
     const st = H.state.state;
+    const valid = { phrases: 1, spell: 1, jargon: 1, etiquette: 1, practice: 1 };
+    if (!valid[tab]) tab = 'phrases';
     st.referenceTab = tab;
     document.querySelectorAll('.ref-tab-btn').forEach((b) => {
       b.classList.toggle('active', b.getAttribute('data-tab') === tab);

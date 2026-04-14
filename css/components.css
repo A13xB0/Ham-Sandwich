@@ -768,29 +768,6 @@ label {
   background: var(--panel3);
 }
 
-.band-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-}
-
-.band-table th,
-.band-table td {
-  border: 1px solid var(--border);
-  padding: 8px 9px;
-  text-align: left;
-  vertical-align: top;
-}
-
-.band-table th {
-  background: var(--panel3);
-}
-
-.band-disclaimer {
-  font-size: 0.82rem;
-  margin-bottom: 10px;
-}
-
 .etiquette-check {
   display: flex;
   align-items: flex-start;

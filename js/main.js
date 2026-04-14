@@ -254,7 +254,6 @@
     H.ui.setReferenceTab(H.state.state.referenceTab || 'phrases');
 
     H.phonetics.renderGrid(H.utils.$('phoneticGrid'));
-    H.bandplan.render(H.utils.$('bandplanMount'));
 
     wireReferenceTabs();
     wireJargon(els);
