@@ -1,10 +1,13 @@
 # Ham Sandwich — Ham Radio Flow Assistant
 
-Static web app for **teleprompter-style** on-air phrasing, nets, and QSOs (UK-oriented reference). Open `ham_radio_flow_cheat_sheet.html` in a browser (double-click works in Chrome). Keep `css/`, `js/`, and `images/` next to the HTML file.
+Static web app for **teleprompter-style** on-air phrasing, nets, and QSOs (UK-oriented reference). Open **`index.html`** in a browser, or use **GitHub Pages** (below) so it loads at the site root.
 
 ## GitHub Pages
 
-Push this folder to a repository and enable **GitHub Pages** from the `main` branch (root or `/docs`). Example: `https://<user>.github.io/<repo>/ham_radio_flow_cheat_sheet.html` if the file is at the site root.
+1. Repo **Settings → Pages → Build and deployment**: source **Deploy from a branch**, branch **`main`**, folder **`/ (root)`**.
+2. After the first deploy, the app is at **`https://<user>.github.io/<repo>/`** (no filename needed). Keep `index.html`, `css/`, `js/`, and `images/` at the repository root.
+
+If you publish from a **`/docs`** folder instead, move this project’s files into `docs/` so `docs/index.html` exists; paths in the HTML are already relative and will work.
 
 ## Notes
 
