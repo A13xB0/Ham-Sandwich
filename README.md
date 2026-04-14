@@ -1,6 +1,6 @@
-# Ham Radio Flow Assistant
+# Ham Sandwich — Ham Radio Flow Assistant
 
-Static web app for **teleprompter-style** on-air phrasing, nets, and QSOs (UK-oriented reference). Open `ham_radio_flow_cheat_sheet.html` in a browser (double-click works in Chrome). Keep `css/` and `js/` next to the HTML file.
+Static web app for **teleprompter-style** on-air phrasing, nets, and QSOs (UK-oriented reference). Open `ham_radio_flow_cheat_sheet.html` in a browser (double-click works in Chrome). Keep `css/`, `js/`, and `images/` next to the HTML file.
 
 ## GitHub Pages
 
